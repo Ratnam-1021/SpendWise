@@ -11,6 +11,20 @@ SpendWise is a premium personal finance tracker built with SwiftUI. It helps use
   <img src="Screenshots/search.png" width="200" />
 </p>
 
+## Project Structure
+```text
+SpendWise/
+├── Models/              # CoreData properties and Chart models
+├── ViewModels/          # Business logic and View-specific data
+│   └── Dashboard/       # Dashboard and Analytics logic
+├── Views/               # SwiftUI components and screens
+│   ├── Dashboard/       # Dashboard-specific components
+│   └── Expenses/        # Expense creation components
+├── Utilities/           # Extensions and Sample Data
+├── Persistence.swift    # CoreData setup (Local storage)
+└── SpendWiseApp.swift   # App entry point
+```
+
 ## Features
 - **Dashboard**: Quick overview of monthly spending and recent transactions with a beautiful card-based UI.
 - **Analytics**: Deep insights into your spending habits with donut charts for categories and bar charts for weekly trends.
