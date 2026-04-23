@@ -20,10 +20,11 @@ struct PersistenceController {
         return controller
     }()
 
-    let container: NSPersistentCloudKitContainer
+    // Changed from NSPersistentCloudKitContainer to NSPersistentContainer
+    let container: NSPersistentContainer
 
     init(inMemory: Bool = false) {
-        container = NSPersistentCloudKitContainer(name: "SpendWise")
+        container = NSPersistentContainer(name: "SpendWise")
 
         if inMemory {
             container.persistentStoreDescriptions.first!.url =
@@ -31,12 +32,12 @@ struct PersistenceController {
         }
 
         container.loadPersistentStores { _, error in
-            if let error {
-                fatalError("CoreData failed to load: \(error)")
+            if let error = error as NSError? {
+                print("CoreData failed to load: \(error), \(error.userInfo)")
             }
         }
 
-        // Auto-merge changes from iCloud
+        // Standard setup for local container
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
     }
