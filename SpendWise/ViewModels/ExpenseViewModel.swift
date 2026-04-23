@@ -76,6 +76,55 @@ class ExpenseViewModel: ObservableObject {
         save()
     }
 
+    // MARK: - Import Transactions (GPay)
+    func importTransactions(_ imported: [GPayTransaction]) {
+        let categoryRequest = Category.fetchRequest()
+        let categories = (try? context.fetch(categoryRequest)) ?? []
+        
+        for tx in imported {
+            guard tx.isDebit else { continue }
+            
+            let request = Expense.fetchRequest()
+            request.predicate = NSPredicate(format: "transactionID == %@", tx.transactionID)
+            let count = (try? context.count(for: request)) ?? 0
+            guard count == 0 else { continue }
+            
+            let expense = Expense(context: context)
+            expense.id = UUID()
+            expense.transactionID = tx.transactionID
+            expense.title = tx.title
+            expense.amount = tx.amount
+            expense.date = tx.date
+            expense.createdAt = Date()
+            
+            autoMatchCategory(for: expense, categories: categories)
+        }
+        save()
+    }
+
+    // MARK: - Auto-match Category
+    private func autoMatchCategory(for expense: Expense, categories: [Category]) {
+        guard let title = expense.title?.lowercased() else { return }
+        
+        if title.contains("food") || title.contains("restaurant") || title.contains("canteen") || title.contains("zomato") || title.contains("swiggy") {
+            expense.category = categories.first { $0.name == "Food" }
+        } else if title.contains("movie") || title.contains("game") || title.contains("entertainment") || title.contains("netflix") {
+            expense.category = categories.first { $0.name == "Entertainment" }
+        } else if title.contains("hospital") || title.contains("medical") || title.contains("health") || title.contains("pharmacy") {
+            expense.category = categories.first { $0.name == "Health" }
+        } else if title.contains("bill") || title.contains("recharge") || title.contains("electricity") {
+            expense.category = categories.first { $0.name == "Bills" }
+        } else if title.contains("travel") || title.contains("uber") || title.contains("ola") || title.contains("transport") || title.contains("petrol") {
+            expense.category = categories.first { $0.name == "Transport" }
+        } else if title.contains("zepto") || title.contains("blinkit") || title.contains("groceries") || title.contains("shopping") {
+            expense.category = categories.first { $0.name == "Shopping" }
+        }
+        
+        if expense.category == nil {
+            expense.category = categories.first
+        }
+    }
+
     // MARK: - Delete Expense
     func deleteExpense(_ expense: Expense) {
         context.delete(expense)

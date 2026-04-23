@@ -70,8 +70,15 @@ struct DashboardView: View {
             }
             .sheet(isPresented: $showImportPicker) {
                 DocumentPicker { url in
-                    let transactions = PhonePeParser.shared.parsePDF(at: url)
-                    vm.importTransactions(transactions)
+                    guard let document = PDFDocument(url: url), let text = document.string else { return }
+                    
+                    if text.contains("PhonePe") {
+                        let transactions = PhonePeParser.shared.parsePDF(at: url)
+                        vm.importTransactions(transactions)
+                    } else if text.contains("Google Pay") || text.contains("GPay") {
+                        let transactions = GPayParser.shared.parsePDF(at: url)
+                        vm.importTransactions(transactions)
+                    }
                 }
             }
             .onAppear {
