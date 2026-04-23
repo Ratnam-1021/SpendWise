@@ -1,0 +1,25 @@
+# Xcode
+#
+# gitignore contributors: writers on GitHub
+
+## Build results
+build/
+DerivedData/
+
+## Project settings
+xcuserdata/
+
+## Scripts
+*.sh
+
+## Files which should be ignored
+.DS_Store
+*.swp
+*.lock
+
+## Swift Package Manager
+.build/
+
+## User-specific files
+*.xcuserdatad
+*.xcuserstate
