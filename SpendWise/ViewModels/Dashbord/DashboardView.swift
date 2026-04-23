@@ -15,6 +15,18 @@ struct DashboardView: View {
     private var expenses: FetchedResults<Expense>
 
     @State private var showAddExpense = false
+    @State private var searchText = ""
+
+    private var filteredExpenses: [Expense] {
+        if searchText.isEmpty {
+            return Array(expenses)
+        } else {
+            return expenses.filter { 
+                $0.title?.localizedCaseInsensitiveContains(searchText) ?? false ||
+                $0.category?.name?.localizedCaseInsensitiveContains(searchText) ?? false
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -29,6 +41,7 @@ struct DashboardView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("SpendWise")
             .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $searchText, prompt: "Search expenses")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -81,15 +94,15 @@ struct DashboardView: View {
     // MARK: - Recent Expenses List
     private var recentExpenses: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent")
+            Text(searchText.isEmpty ? "Recent" : "Search Results")
                 .font(.headline)
                 .padding(.horizontal, 4)
 
-            if expenses.isEmpty {
+            if filteredExpenses.isEmpty {
                 emptyState
             } else {
                 LazyVStack(spacing: 2) {
-                    ForEach(expenses.prefix(20)) { expense in
+                    ForEach(filteredExpenses.prefix(20)) { expense in
                         ExpenseRowView(expense: expense)
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
