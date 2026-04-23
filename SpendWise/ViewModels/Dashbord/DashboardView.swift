@@ -45,22 +45,21 @@ struct DashboardView: View {
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $searchText, prompt: "Search expenses")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        showImportPicker = true
-                    } label: {
-                        Label("Import", systemImage: "doc.badge.plus")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.indigo)
-                    }
-                }
-                
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showAddExpense = true
+                    Menu {
+                        Button {
+                            showImportPicker = true
+                        } label: {
+                            Label("Import Statement", systemImage: "doc.badge.plus")
+                        }
+                        
+                        Button {
+                            showAddExpense = true
+                        } label: {
+                            Label("Add Expense", systemImage: "plus.circle")
+                        }
                     } label: {
-                        Image(systemName: "plus.circle.fill")
+                        Image(systemName: "ellipsis.circle.fill")
                             .font(.title2)
                             .foregroundStyle(.indigo)
                     }
