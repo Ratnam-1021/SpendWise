@@ -34,7 +34,8 @@ class GPayParser {
         let datePattern = #"\d{1,2}\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec),\s\d{4}"#
         let amountPattern = #"₹([\d,.]+)"#
         let txIdPattern = #"UPI Transaction ID: (\d+)"#
-        let titlePattern = #"(Paid to|Received from)\s+([^\n\r]+)"#
+        // Super Greedy Title pattern
+        let titlePattern = #"(Paid to|Received from)\s+(.*?)(?=\n|UPI Transaction ID|$)"#
         
         let nsText = text as NSString
         let txIdRegex = try? NSRegularExpression(pattern: txIdPattern)
@@ -51,20 +52,34 @@ class GPayParser {
             let txRange = match.range
             let txID = nsText.substring(with: match.range(at: 1))
             
-            let start = max(0, txRange.location - 200)
-            let end = min(nsText.length, txRange.location + 200)
+            let start = max(0, txRange.location - 400)
+            let end = min(nsText.length, txRange.location + 400)
             let searchRange = NSRange(location: start, length: end - start)
             let localText = nsText.substring(with: searchRange) as NSString
+            
+            print("--- GPay Block ---")
+            print(localText)
+            print("------------------")
             
             var title = "Unknown"
             var isDebit = true
             var amount = 0.0
             var date = Date()
             
-            if let titleMatch = titleRegex?.firstMatch(in: localText as String, range: NSRange(location: 0, length: localText.length)) {
-                let type = localText.substring(with: titleMatch.range(at: 1))
-                title = localText.substring(with: titleMatch.range(at: 2)).trimmingCharacters(in: .whitespaces)
-                isDebit = type.contains("Paid")
+            let flexibleTitlePattern = #"(?i)(id to|ed from|Paid to|Received from)\s+([\s\S]+?)(?=\s*(?:\n|UPI Transaction ID|$))"#
+            let flexibleTitleRegex = try? NSRegularExpression(pattern: flexibleTitlePattern)
+            
+            if let titleMatch = flexibleTitleRegex?.firstMatch(in: localText as String, range: NSRange(location: 0, length: localText.length)) {
+                let type = localText.substring(with: titleMatch.range(at: 1)).lowercased()
+                let rawTitle = localText.substring(with: titleMatch.range(at: 2))
+                
+                // Re-assemble shattered words
+                title = rawTitle.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "").trimmingCharacters(in: .whitespaces)
+                
+                isDebit = type.contains("to")
+                print("🎯 Found Title (GPay): \(title)")
+            } else {
+                print("❌ Could not find Title (GPay)")
             }
             
             if let amountMatch = amountRegex?.firstMatch(in: localText as String, range: NSRange(location: 0, length: localText.length)) {

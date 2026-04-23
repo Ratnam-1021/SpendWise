@@ -54,24 +54,7 @@ class ExpenseViewModel: ObservableObject {
             expense.date = tx.date
             expense.createdAt = Date()
             
-            // 4. Auto-match category
-            let lowerTitle = tx.title.lowercased()
-            if lowerTitle.contains("food") || lowerTitle.contains("restaurant") || lowerTitle.contains("canteen") {
-                expense.category = categories.first { $0.name == "Food" }
-            } else if lowerTitle.contains("movie") || lowerTitle.contains("game") || lowerTitle.contains("entertainment") {
-                expense.category = categories.first { $0.name == "Entertainment" }
-            } else if lowerTitle.contains("hospital") || lowerTitle.contains("medical") || lowerTitle.contains("health") {
-                expense.category = categories.first { $0.name == "Health" }
-            } else if lowerTitle.contains("bill") || lowerTitle.contains("recharge") || lowerTitle.contains("electricity") {
-                expense.category = categories.first { $0.name == "Bills" }
-            } else if lowerTitle.contains("travel") || lowerTitle.contains("uber") || lowerTitle.contains("ola") || lowerTitle.contains("transport") {
-                expense.category = categories.first { $0.name == "Transport" }
-            }
-            
-            // Default to first category if no match
-            if expense.category == nil {
-                expense.category = categories.first
-            }
+            autoMatchCategory(for: expense, categories: categories)
         }
         save()
     }
@@ -105,24 +88,28 @@ class ExpenseViewModel: ObservableObject {
     // MARK: - Auto-match Category
     private func autoMatchCategory(for expense: Expense, categories: [Category]) {
         guard let title = expense.title?.lowercased() else { return }
+        print("🔍 Categorizing: \(title)")
         
-        if title.contains("food") || title.contains("restaurant") || title.contains("canteen") || title.contains("zomato") || title.contains("swiggy") {
+        if title.contains("food") || title.contains("restaurant") || title.contains("canteen") || title.contains("zomato") || title.contains("swiggy") || title.contains("eat") {
             expense.category = categories.first { $0.name == "Food" }
-        } else if title.contains("movie") || title.contains("game") || title.contains("entertainment") || title.contains("netflix") {
+        } else if title.contains("movie") || title.contains("game") || title.contains("entertainment") || title.contains("netflix") || title.contains("hotstar") {
             expense.category = categories.first { $0.name == "Entertainment" }
-        } else if title.contains("hospital") || title.contains("medical") || title.contains("health") || title.contains("pharmacy") {
+        } else if title.contains("hospital") || title.contains("medical") || title.contains("health") || title.contains("pharmacy") || title.contains("dr") {
             expense.category = categories.first { $0.name == "Health" }
-        } else if title.contains("bill") || title.contains("recharge") || title.contains("electricity") {
+        } else if title.contains("bill") || title.contains("recharge") || title.contains("electricity") || title.contains("jio") || title.contains("airtel") {
             expense.category = categories.first { $0.name == "Bills" }
-        } else if title.contains("travel") || title.contains("uber") || title.contains("ola") || title.contains("transport") || title.contains("petrol") {
+        } else if title.contains("travel") || title.contains("uber") || title.contains("ola") || title.contains("transport") || title.contains("petrol") || title.contains("railway") {
             expense.category = categories.first { $0.name == "Transport" }
-        } else if title.contains("zepto") || title.contains("blinkit") || title.contains("groceries") || title.contains("shopping") {
+        } else if title.contains("zepto") || title.contains("blinkit") || title.contains("groceries") || title.contains("shopping") || title.contains("ixigo") || title.contains("amazon") || title.contains("flipkart") {
             expense.category = categories.first { $0.name == "Shopping" }
         }
         
         if expense.category == nil {
-            expense.category = categories.first
+            // Default to Food as first choice if no match, instead of random
+            expense.category = categories.first { $0.name == "Food" } ?? categories.first
         }
+        
+        print("✅ Assigned Category: \(expense.category?.name ?? "None")")
     }
 
     // MARK: - Delete Expense

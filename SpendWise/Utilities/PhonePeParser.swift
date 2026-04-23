@@ -35,10 +35,9 @@ class PhonePeParser {
         let datePattern = #"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{1,2},\s\d{4}"#
         // Amount pattern: ₹20 (handle commas too)
         let amountPattern = #"₹([\d,]+)"#
-        // Transaction ID pattern: T2604191357492265742534
         let txIdPattern = #"Transaction ID (T\d+)"#
-        // Title pattern: Paid to OM ENTERPRISES or Received from...
-        let titlePattern = #"(Paid to|Received from)\s+([^\n\r]+)"#
+        // Super Greedy Title pattern: Capture everything after "Paid to" until a newline or key marker
+        let titlePattern = #"(Paid to|Received from)\s+(.*?)(?=\n|Transaction ID|UTR No|Paid by|$)"#
         
         let lines = text.components(separatedBy: .newlines)
         
@@ -64,20 +63,37 @@ class PhonePeParser {
             
             // Look backwards for Title and Date, forwards for Amount
             // In PhonePe format, Title is usually above Transaction ID
-            let start = max(0, txRange.location - 300)
-            let end = min(nsText.length, txRange.location + 300)
+            let start = max(0, txRange.location - 500)
+            let end = min(nsText.length, txRange.location + 500)
             let searchRange = NSRange(location: start, length: end - start)
             let localText = nsText.substring(with: searchRange) as NSString
+            
+            print("--- Transaction Block ---")
+            print(localText)
+            print("-------------------------")
             
             var title = "Unknown"
             var isDebit = true
             var amount = 0.0
             var date = Date()
             
-            if let titleMatch = titleRegex?.firstMatch(in: localText as String, range: NSRange(location: 0, length: localText.length)) {
-                let type = localText.substring(with: titleMatch.range(at: 1))
-                title = localText.substring(with: titleMatch.range(at: 2)).trimmingCharacters(in: .whitespaces)
-                isDebit = type.contains("Paid")
+            // The PDF extractor shatters words (e.g. "Pa\nid to A\nirt\ne\nl").
+            // We look for "id to" or "ed from" (the surviving fragments of Paid/Received) 
+            // and capture everything up to "Transaction ID".
+            let flexibleTitlePattern = #"(?i)(id to|ed from|Paid to|Received from)\s+([\s\S]+?)(?=\s*Transaction ID)"#
+            let flexibleTitleRegex = try? NSRegularExpression(pattern: flexibleTitlePattern)
+            
+            if let titleMatch = flexibleTitleRegex?.firstMatch(in: localText as String, range: NSRange(location: 0, length: localText.length)) {
+                let type = localText.substring(with: titleMatch.range(at: 1)).lowercased()
+                let rawTitle = localText.substring(with: titleMatch.range(at: 2))
+                
+                // Re-assemble shattered words by completely removing newlines
+                title = rawTitle.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "").trimmingCharacters(in: .whitespaces)
+                
+                isDebit = type.contains("to")
+                print("🎯 Found Title: \(title)")
+            } else {
+                print("❌ Could not find Title in this block")
             }
             
             if let amountMatch = amountRegex?.firstMatch(in: localText as String, range: NSRange(location: 0, length: localText.length)) {
