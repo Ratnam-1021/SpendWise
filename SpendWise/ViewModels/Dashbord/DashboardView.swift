@@ -15,6 +15,7 @@ struct DashboardView: View {
     private var expenses: FetchedResults<Expense>
 
     @State private var showAddExpense = false
+    @State private var showImportPicker = false
     @State private var searchText = ""
 
     private var filteredExpenses: [Expense] {
@@ -43,6 +44,17 @@ struct DashboardView: View {
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $searchText, prompt: "Search expenses")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showImportPicker = true
+                    } label: {
+                        Label("Import", systemImage: "doc.badge.plus")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.indigo)
+                    }
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showAddExpense = true
@@ -55,6 +67,12 @@ struct DashboardView: View {
             }
             .sheet(isPresented: $showAddExpense) {
                 AddExpenseView(vm: vm)
+            }
+            .sheet(isPresented: $showImportPicker) {
+                DocumentPicker { url in
+                    let transactions = PhonePeParser.shared.parsePDF(at: url)
+                    vm.importTransactions(transactions)
+                }
             }
             .onAppear {
                 vm.seedCategoriesIfNeeded()

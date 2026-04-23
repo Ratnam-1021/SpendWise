@@ -29,6 +29,53 @@ class ExpenseViewModel: ObservableObject {
         save()
     }
 
+    // MARK: - Import Transactions
+    func importTransactions(_ imported: [PhonePeTransaction]) {
+        // Get all categories for automatic matching
+        let categoryRequest = Category.fetchRequest()
+        let categories = (try? context.fetch(categoryRequest)) ?? []
+        
+        for tx in imported {
+            // 1. Skip if not a debit (we only track expenses for now)
+            guard tx.isDebit else { continue }
+            
+            // 2. Skip if already exists
+            let request = Expense.fetchRequest()
+            request.predicate = NSPredicate(format: "transactionID == %@", tx.transactionID)
+            let count = (try? context.count(for: request)) ?? 0
+            guard count == 0 else { continue }
+            
+            // 3. Create new expense
+            let expense = Expense(context: context)
+            expense.id = UUID()
+            expense.transactionID = tx.transactionID
+            expense.title = tx.title
+            expense.amount = tx.amount
+            expense.date = tx.date
+            expense.createdAt = Date()
+            
+            // 4. Auto-match category
+            let lowerTitle = tx.title.lowercased()
+            if lowerTitle.contains("food") || lowerTitle.contains("restaurant") || lowerTitle.contains("canteen") {
+                expense.category = categories.first { $0.name == "Food" }
+            } else if lowerTitle.contains("movie") || lowerTitle.contains("game") || lowerTitle.contains("entertainment") {
+                expense.category = categories.first { $0.name == "Entertainment" }
+            } else if lowerTitle.contains("hospital") || lowerTitle.contains("medical") || lowerTitle.contains("health") {
+                expense.category = categories.first { $0.name == "Health" }
+            } else if lowerTitle.contains("bill") || lowerTitle.contains("recharge") || lowerTitle.contains("electricity") {
+                expense.category = categories.first { $0.name == "Bills" }
+            } else if lowerTitle.contains("travel") || lowerTitle.contains("uber") || lowerTitle.contains("ola") || lowerTitle.contains("transport") {
+                expense.category = categories.first { $0.name == "Transport" }
+            }
+            
+            // Default to first category if no match
+            if expense.category == nil {
+                expense.category = categories.first
+            }
+        }
+        save()
+    }
+
     // MARK: - Delete Expense
     func deleteExpense(_ expense: Expense) {
         context.delete(expense)
