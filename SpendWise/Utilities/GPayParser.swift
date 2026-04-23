@@ -51,7 +51,9 @@ class GPayParser {
             let txRange = match.range
             let txID = nsText.substring(with: match.range(at: 1))
             
-            let searchRange = NSRange(location: max(0, txRange.location - 200), length: min(text.count, txRange.location + 200))
+            let start = max(0, txRange.location - 200)
+            let end = min(nsText.length, txRange.location + 200)
+            let searchRange = NSRange(location: start, length: end - start)
             let localText = nsText.substring(with: searchRange) as NSString
             
             var title = "Unknown"

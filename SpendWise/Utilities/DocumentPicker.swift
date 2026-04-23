@@ -24,8 +24,12 @@ struct DocumentPicker: UIViewControllerRepresentable {
         }
         
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            if let url = urls.first {
+            guard let url = urls.first else { return }
+            
+            // Required for reading files outside the app's sandbox
+            if url.startAccessingSecurityScopedResource() {
                 onPick(url)
+                url.stopAccessingSecurityScopedResource()
             }
         }
     }

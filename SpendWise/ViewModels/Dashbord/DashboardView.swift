@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PDFKit
 
 struct DashboardView: View {
     @ObservedObject var vm: ExpenseViewModel
@@ -70,14 +71,26 @@ struct DashboardView: View {
             }
             .sheet(isPresented: $showImportPicker) {
                 DocumentPicker { url in
-                    guard let document = PDFDocument(url: url), let text = document.string else { return }
+                    guard let document = PDFDocument(url: url) else { 
+                        print("❌ Failed to load PDF document")
+                        return 
+                    }
+                    
+                    let text = document.string ?? ""
+                    print("📄 PDF Loaded. Length: \(text.count)")
                     
                     if text.contains("PhonePe") {
+                        print("✅ Detected: PhonePe")
                         let transactions = PhonePeParser.shared.parsePDF(at: url)
+                        print("🔎 Found \(transactions.count) transactions")
                         vm.importTransactions(transactions)
                     } else if text.contains("Google Pay") || text.contains("GPay") {
+                        print("✅ Detected: GPay")
                         let transactions = GPayParser.shared.parsePDF(at: url)
+                        print("🔎 Found \(transactions.count) transactions")
                         vm.importTransactions(transactions)
+                    } else {
+                        print("⚠️ Unknown PDF format")
                     }
                 }
             }

@@ -64,7 +64,9 @@ class PhonePeParser {
             
             // Look backwards for Title and Date, forwards for Amount
             // In PhonePe format, Title is usually above Transaction ID
-            let searchRange = NSRange(location: max(0, txRange.location - 300), length: min(text.count, txRange.location + 300))
+            let start = max(0, txRange.location - 300)
+            let end = min(nsText.length, txRange.location + 300)
+            let searchRange = NSRange(location: start, length: end - start)
             let localText = nsText.substring(with: searchRange) as NSString
             
             var title = "Unknown"
