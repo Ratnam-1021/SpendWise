@@ -21,7 +21,7 @@ SpendWise/
 │   ├── Dashboard/       # Dashboard-specific components
 │   └── Expenses/        # Expense creation components
 ├── Utilities/           # Extensions and Sample Data
-├── Persistence.swift    # CoreData setup (Local storage)
+├── Persistence.swift    # Storage setup (Local storage)
 └── SpendWiseApp.swift   # App entry point
 ```
 
@@ -34,7 +34,7 @@ SpendWise/
 
 ## Tech Stack
 - **UI**: SwiftUI (Modern Declarative UI)
-- **Database**: Core Data (Local storage for privacy and speed)
+- **Database**: App Sandbox (Local storage for privacy and speed)
 - **Visuals**: Swift Charts (Native iOS charting)
 - **Architecture**: MVVM (Clean and maintainable code)
 
